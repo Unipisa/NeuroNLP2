@@ -7,7 +7,7 @@ def assign_tensor(tensor, val):
     """
     copy val to tensor
     Args:
-        tensor: an n-dimensional torch.Tensor or autograd.Variable
+        tensor: an n-dimensional torch.Tensor
         val: an n-dimensional torch.Tensor to fill the tensor with
 
     Returns:

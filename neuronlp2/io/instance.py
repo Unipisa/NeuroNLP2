@@ -1,6 +1,6 @@
 __author__ = 'max'
 
-__all__ = ['Sentence', 'DependencyInstance', 'NERInstance']
+__all__ = ['Sentence', 'SentenceTree', 'NERInstance']
 
 
 class Sentence(object):
@@ -10,21 +10,25 @@ class Sentence(object):
         self.char_seqs = char_seqs
         self.char_id_seqs = char_id_seqs
 
-    def length(self):
+    def __len__(self):
         return len(self.words)
 
 
-class DependencyInstance(object):
-    def __init__(self, sentence, postags, pos_ids, heads, types, type_ids):
-        self.sentence = sentence
+class SentenceTree(Sentence):
+    def __init__(self, sentence, lemmas, postags, pos_ids, xpostags, xpos_ids, featss, heads, types, type_ids, depss, miscs):
+        self.__super__(Sentence, sentence.words, sentence.word_ids,
+                       sentence.char_seqs, sentence.char_id_seqs)
+        self.lemmas = lemmas
         self.postags = postags
         self.pos_ids = pos_ids
+        self.xpostags = xpostags
+        self.xpos_ids = xpos_ids
+        self.featss = featss
         self.heads = heads
         self.types = types
         self.type_ids = type_ids
-
-    def length(self):
-        return self.sentence.length()
+        self.depss = depss
+        self.miscs = miscs
 
 
 class NERInstance(object):
