@@ -84,11 +84,11 @@ class CoNLLXWriter(object):
 
 
 class CoNLLUWriter(object):
-    def __init__(self, word_alphabet, char_alphabet, pos_alphabet, xpos_alphabet, type_alphabet):
+    def __init__(self, word_alphabet, char_alphabet, upos_alphabet, xpos_alphabet, type_alphabet):
         self.__source_file = None
         self.__word_alphabet = word_alphabet
         self.__char_alphabet = char_alphabet
-        self.__pos_alphabet = pos_alphabet
+        self.__upos_alphabet = upos_alphabet
         self.__xpos_alphabet = xpos_alphabet
         self.__type_alphabet = type_alphabet
 
@@ -98,20 +98,23 @@ class CoNLLUWriter(object):
     def close(self):
         self.__source_file.close()
 
-    def write(self, word, lemma, pos, xpos, feats, head, type, deps, misc, lengths, symbolic_root=False, symbolic_end=False):
+    def write(self, word, lemma, upos, xpos, feats, head, type, deps, misc, lengths, symbolic_root=False, symbolic_end=False):
+        """
+        Warning: we ignore lemma, feats, desps and misc for the time being.
+        """
         batch_size, _ = word.shape
         start = 1 if symbolic_root else 0
         end = 1 if symbolic_end else 0
         for i in range(batch_size):
             for j in range(start, lengths[i] - end):
-                w = self.__word_alphabet.get_instance(word[i, j])
-                l = lemma[i][j]
-                p = self.__pos_alphabet.get_instance(pos[i, j])
-                x = self.__xpos_alphabet.get_instance(xpos[i, j])
-                f = feats[i][j]
-                t = self.__type_alphabet.get_instance(type[i, j])
+                w = self.__word_alphabet.get_entry(word[i, j])
+                l = '_'
+                p = self.__upos_alphabet.get_entry(upos[i, j])
+                x = self.__xpos_alphabet.get_entry(xpos[i, j])
+                f = '_'
                 h = head[i][j]
-                d = deps[i][j]
-                m = misc[i][j]
-                self.__source_file.write('%d\t%s\t%s\t%\t%s\t%s\t%d\t%s\n' % (j, w, l, p, x, f, h, t, d, m))
+                t = self.__type_alphabet.get_entry(type[i, j])
+                d = '_'
+                m = '_'
+                self.__source_file.write('%d\t%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\n' % (j, w, l, p, x, f, h, t, d, m))
             self.__source_file.write('\n')

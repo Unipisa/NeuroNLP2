@@ -21,7 +21,7 @@ class PriorOrder(Enum):
 class DeepBiAffine(nn.Module):
     def __init__(self, word_dim, num_words, char_dim, num_chars, pos_dim, num_pos, xpos_dim, num_xpos, rnn_mode, hidden_size, num_layers, num_labels, arc_space, type_space,
                  embedd_word=None, embedd_char=None, embedd_pos=None, embedd_xpos=None, p_in=0.33, p_out=0.33, p_rnn=(0.33, 0.33), pos=True, xpos=True, activation='elu'):
-        super(DeepBiAffine, self).__init__()
+        super().__init__()
 
         self.word_embed = nn.Embedding(num_words, word_dim, _weight=embedd_word, padding_idx=1)
         self.pos_embed = nn.Embedding(num_pos, pos_dim, _weight=embedd_pos, padding_idx=1) if pos else None
@@ -277,7 +277,7 @@ class DeepBiAffine(nn.Module):
 class NeuroMST(DeepBiAffine):
     def __init__(self, word_dim, num_words, char_dim, num_chars, pos_dim, num_pos, xpos_dim, num_xpos, rnn_mode, hidden_size, num_layers, num_labels, arc_space, type_space,
                  embedd_word=None, embedd_char=None, embedd_pos=None, embedd_xpos=None, p_in=0.33, p_out=0.33, p_rnn=(0.33, 0.33), pos=True, xpos=True, activation='elu'):
-        super(NeuroMST, self).__init__(word_dim, num_words, char_dim, num_chars, pos_dim, num_pos, xpos_dim, num_xpos, rnn_mode, hidden_size, num_layers, num_labels, arc_space, type_space,
+        super().__init__(word_dim, num_words, char_dim, num_chars, pos_dim, num_pos, xpos_dim, num_xpos, rnn_mode, hidden_size, num_layers, num_labels, arc_space, type_space,
                                        embedd_word=embedd_word, embedd_char=embedd_char, embedd_pos=embedd_pos, embedd_xpos=embedd_xpos, p_in=p_in, p_out=p_out, p_rnn=p_rnn, pos=pos, xpos=xpos, activation=activation)
         self.biaffine = None
         self.treecrf = TreeCRF(arc_space)
@@ -350,7 +350,7 @@ class StackPtrNet(nn.Module):
                  embedd_word=None, embedd_char=None, embedd_pos=None, embedd_xpos=None, p_in=0.33, p_out=0.33, p_rnn=(0.33, 0.33),
                  pos=True, xpos=True, prior_order='inside_out', grandPar=False, sibling=False, activation='elu'):
 
-        super(StackPtrNet, self).__init__()
+        super().__init__()
         self.word_embed = nn.Embedding(num_words, word_dim, _weight=embedd_word, padding_idx=1)
         self.pos_embed = nn.Embedding(num_pos, pos_dim, _weight=embedd_pos, padding_idx=1) if pos else None
         self.xpos_embed = nn.Embedding(num_xpos, xpos_dim, _weight=embedd_xpos, padding_idx=1) if xpos else None
@@ -779,34 +779,38 @@ class StackPtrNet(nn.Module):
 
 
 #----------------------------------------------------------------------
-# added from LeftToRightParser. Attardi
+# added from Left2Right-Pointer-Parser. Attardi
 
 class NewStackPtrNet(nn.Module):
     def __init__(self, word_dim, num_words, char_dim, num_chars, pos_dim, num_pos,
                  xpos_dim, num_xpos, num_filters, kernel_size,
                  rnn_mode, input_size_decoder, hidden_size,
                  encoder_layers, decoder_layers, num_labels, arc_space, type_space,
-                 embedd_word=None, embedd_char=None, embedd_pos=None, embedd_xpos=None, p_in=0.33, p_out=0.33, p_rnn=(0.33, 0.33),
-                 biaffine=True,
-                 pos=True, xpos=True, char=True, prior_order='inside_out', skipConnect=False, grandPar=False, sibling=False):
+                 embedd_word=None, embedd_char=None, embedd_pos=None, embedd_xpos=None,
+                 p_in=0.33, p_out=0.33, p_rnn=(0.33, 0.33), biaffine=True,
+                 pos=True, xpos=True, char=True, skipConnect=False, grandPar=False, sibling=False):
 
-        super(NewStackPtrNet, self).__init__()
-        self.word_embedd = nn.Embedding(num_words, word_dim, _weight=embedd_word, padding_idx=1)
-        self.pos_embedd = nn.Embedding(num_pos, pos_dim, _weight=embedd_pos, padding_idx=1) if pos else None
-        self.xpos_embedd = nn.Embedding(num_xpos, xpos_dim, _weight=embedd_xpos, padding_idx=1) if xpos else None
-        self.char_embedd = nn.Embedding(num_chars, char_dim, _weight=embedd_char, padding_idx=1) if char else None
+        super().__init__()
+        if embedd_word is not None:
+            self.word_embedd = nn.Embedding.from_pretrained(embedd_word, freeze=True, padding_idx=1)
+        else:
+            self.word_embedd = nn.Embedding(num_words, word_dim, padding_idx=1)
+        if embedd_pos is not None:
+            self.pos_embedd = nn.Embedding.from_pretrained(embedd_pos, freeze=True, padding_idx=1)
+        else:
+            self.pos_embedd = nn.Embedding(num_pos, pos_dim, padding_idx=1) if pos else None
+        if embedd_xpos is not None:
+            self.xpos_embedd = nn.Embedding.from_pretrained(embedd_xpos, freeze=True, padding_idx=1)
+        else:
+            self.xpos_embedd = nn.Embedding(num_xpos, xpos_dim, padding_idx=1) if xpos else None
+        if embedd_char is not None:
+            self.char_embedd = nn.Embedding.from_pretrained(embedd_char, freeze=True, padding_idx=1)
+        else:
+            self.char_embedd = nn.Embedding(num_chars, char_dim, padding_idx=1) if char else None
         self.conv1d = nn.Conv1d(char_dim, num_filters, kernel_size, padding=kernel_size - 1) if char else None
         self.dropout_in = nn.Dropout2d(p=p_in)
         self.dropout_out = nn.Dropout2d(p=p_out)
         self.num_labels = num_labels
-        if prior_order in ['deep_first', 'shallow_first']:
-            self.prior_order = PriorOrder.DEPTH
-        elif prior_order == 'inside_out':
-            self.prior_order = PriorOrder.INSIDE_OUT
-        elif prior_order == 'left2right':
-            self.prior_order = PriorOrder.LEFT2RIGTH
-        else:
-            raise ValueError('Unknown prior order: %s' % prior_order)
         self.pos = pos
         self.xpos = xpos
         self.char = char
@@ -867,16 +871,16 @@ class NewStackPtrNet(nn.Module):
 
         if self.char:
             # [batch, length, char_length, char_dim]
-            char = self.char_embedd(input_char)
-            char_size = char.size()
+            char = self.char_embedd(input_char) # input_char.size() = [32, 30, 45]
+            batch, length, char_length, char_dim = char.size()
             # first transform to [batch *length, char_length, char_dim]
             # then transpose to [batch * length, char_dim, char_length]
-            char = char.view(char_size[0] * char_size[1], char_size[2], char_size[3]).transpose(1, 2)
+            char = char.view(batch * length, char_length, char_dim).transpose(1, 2)
             # put into cnn [batch*length, char_filters, char_length]
             # then put into maxpooling [batch * length, char_filters]
             char, _ = self.conv1d(char).max(dim=2)
             # reshape to [batch, length, char_filters]
-            char = torch.tanh(char).view(char_size[0], char_size[1], -1)
+            char = torch.tanh(char).view(batch, length, -1)
             # apply dropout on input
             char = self.dropout_in(char)
             # concatenate word and char [batch, length, word_dim+char_filter]
@@ -978,8 +982,10 @@ class NewStackPtrNet(nn.Module):
 
         return output, hn, mask_d, length_d
 
+
     def forward(self, input_word, input_char, input_pos, input_xpos, mask=None, length=None, hx=None):
         raise RuntimeError('Stack Pointer Network does not implement forward')
+
 
     def _transform_decoder_init_state(self, hn):
         if isinstance(hn, tuple):
@@ -1018,8 +1024,10 @@ class NewStackPtrNet(nn.Module):
                 hn = torch.cat([hn, hn.new_zeros(self.decoder_layers - 1, batch, hidden_size)], dim=0)
         return hn
 
-    def loss(self, input_word, input_char, input_pos, input_xpos, heads, stacked_heads, children, siblings, stacked_types, previous, next, label_smooth,
-             skip_connect=None, mask_e=None, length_e=None, mask_d=None, length_d=None, hx=None):
+
+    def loss(self, input_encoder, input_decoder, label_smooth, hx=None):
+        input_word, input_char, input_pos, input_xpos, heads, types, mask_e, length_e = input_encoder
+        stacked_heads, children, siblings, stacked_types, skip_connect, previous, next, mask_d, length_d = input_decoder
         # output from encoder [batch, length_encoder, hidden_size]
         output_enc, hn, mask_e, _ = self._get_encoder_output(input_word, input_char, input_pos, input_xpos, mask_e=mask_e, length_e=length_e, hx=hx)
 

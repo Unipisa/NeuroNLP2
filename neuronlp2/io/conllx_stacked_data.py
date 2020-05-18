@@ -5,10 +5,11 @@ import torch
 # The Variable API has been deprecated: Variables are no longer necessary to use autograd with tensors. 
 #from torch.autograd import Variable # LeftToRightParser
 from neuronlp2.io.reader import CoNLLXReader
-from neuronlp2.io.conllu_data import _buckets, NUM_SYMBOLIC_TAGS, create_alphabets
 from neuronlp2.io.common import DIGIT_RE, MAX_CHAR_LENGTH, UNK_ID
 from neuronlp2.io.common import PAD_CHAR, PAD, PAD_POS, PAD_TYPE, PAD_ID_CHAR, PAD_ID_TAG, PAD_ID_WORD
 from neuronlp2.io.common import ROOT, END, ROOT_CHAR, ROOT_POS, ROOT_TYPE, END_CHAR, END_POS, END_TYPE
+
+_buckets = [10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 140]
 
 NUM_CHAR_PAD = 2
 

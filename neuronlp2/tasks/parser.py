@@ -2,21 +2,14 @@ __author__ = 'max'
 
 import re
 import numpy as np
+import unicodedata
 
 def is_uni_punctuation(word):
-    match = re.match("^[^\w\s]+$]", word, flags=re.UNICODE)
-    return match is not None
+    return all(unicodedata.category(c).startswith('P') for c in word)
 
 
-def is_punctuation(word, pos, punct_set=None):
-    if punct_set is None:
-        return is_uni_punctuation(word)
-    else:
-        return pos in punct_set
-
-
-def eval(words, postags, heads_pred, types_pred, heads, types, word_alphabet, pos_alphabet, lengths,
-         punct_set=None, symbolic_root=False, symbolic_end=False):
+def eval(words, heads_pred, types_pred, heads, types, word_alphabet,
+         lengths=None, symbolic_root=False, symbolic_end=False):
     batch_size, _ = words.shape
     ucorr = 0.
     lcorr = 0.
@@ -40,8 +33,7 @@ def eval(words, postags, heads_pred, types_pred, heads, types, word_alphabet, po
         ucm_nopunc = 1.
         lcm_nopunc = 1.
         for j in range(start, lengths[i] - end):
-            word = word_alphabet.get_instance(words[i, j])
-            pos = pos_alphabet.get_instance(postags[i, j])
+            word = word_alphabet.get_entry(words[i, j])
 
             total += 1
             if heads[i, j] == heads_pred[i, j]:
@@ -54,7 +46,7 @@ def eval(words, postags, heads_pred, types_pred, heads, types, word_alphabet, po
                 ucm = 0
                 lcm = 0
 
-            if not is_punctuation(word, pos, punct_set):
+            if not is_uni_punctuation(word):
                 total_nopunc += 1
                 if heads[i, j] == heads_pred[i, j]:
                     ucorr_nopunc += 1

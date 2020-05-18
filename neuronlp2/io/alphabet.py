@@ -11,8 +11,8 @@ class Alphabet(object):
     def __init__(self, name, default_value=False, keep_growing=True, singleton=False):
         self.__name = name
 
-        self.instance2index = {}
-        self.instances = []
+        self.entry2index = {}
+        self.entries = []
         self.default_value = default_value
         self.offset = 1 if self.default_value else 0
         self.keep_growing = keep_growing
@@ -25,10 +25,10 @@ class Alphabet(object):
 
         self.logger = get_logger('Alphabet')
 
-    def add(self, instance):
-        if instance not in self.instance2index:
-            self.instances.append(instance)
-            self.instance2index[instance] = self.next_index
+    def add(self, entry):
+        if entry not in self.entry2index:
+            self.entries.append(entry)
+            self.entry2index[entry] = self.next_index
             self.next_index += 1
 
     def add_singleton(self, id):
@@ -49,43 +49,42 @@ class Alphabet(object):
         else:
             return id in self.singletons
 
-    def get_index(self, instance):
+    def get_index(self, entry):
         try:
-            return self.instance2index[instance]
+            return self.entry2index[entry]
         except KeyError:
             if self.keep_growing:
                 index = self.next_index
-                self.add(instance)
+                self.add(entry)
                 return index
+            elif self.default_value:
+                return self.default_index
             else:
-                if self.default_value:
-                    return self.default_index
-                else:
-                    raise KeyError("instance not found: %s" % instance)
+                raise KeyError("entry not found: %s" % entry)
 
-    def get_instance(self, index):
+    def get_entry(self, index):
         if self.default_value and index == self.default_index:
             # First index is occupied by the wildcard element.
             return '<_UNK>'
         else:
             try:
-                return self.instances[index - self.offset]
+                return self.entries[index - self.offset]
             except IndexError:
                 raise IndexError('unknown index: %d' % index)
 
     def size(self):
-        return len(self.instances) + self.offset
+        return len(self.entries) + self.offset
 
     def singleton_size(self):
         return len(self.singletons)
 
     def items(self):
-        return self.instance2index.items()
+        return self.entry2index.items()
 
     def enumerate_items(self, start):
         if start < self.offset or start >= self.size():
             raise IndexError("Enumerate is allowed between [%d : size of the alphabet)" % self.offset)
-        return zip(range(start, len(self.instances) + self.offset), self.instances[start - self.offset:])
+        return zip(range(start, len(self.entries) + self.offset), self.entries[start - self.offset:])
 
     def close(self):
         self.keep_growing = False
@@ -95,14 +94,14 @@ class Alphabet(object):
 
     def get_content(self):
         if self.singletons is None:
-            return {'instance2index': self.instance2index, 'instances': self.instances}
+            return {'entry2index': self.entry2index, 'entries': self.entries}
         else:
-            return {'instance2index': self.instance2index, 'instances': self.instances,
+            return {'entry2index': self.entry2index, 'entries': self.entries,
                     'singletions': list(self.singletons)}
 
     def __from_json(self, data):
-        self.instances = data["instances"]
-        self.instance2index = data["instance2index"]
+        self.entries = data["entries"]
+        self.entry2index = data["entry2index"]
         if 'singletions' in data:
             self.singletons = set(data['singletions'])
         else:
@@ -134,5 +133,5 @@ class Alphabet(object):
         """
         loading_name = name if name else self.__name
         self.__from_json(json.load(open(os.path.join(input_directory, loading_name + ".json"))))
-        self.next_index = len(self.instances) + self.offset
+        self.next_index = len(self.entries) + self.offset
         self.keep_growing = False
